@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediCore HMS — Smart Hospital Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #040d1a;
+    --bg2: #071428;
+    --surface: #0c1f3a;
+    --surface2: #0f2648;
+    --accent: #00d4ff;
+    --accent2: #0098cc;
+    --green: #00e5a0;
+    --red: #ff4d6d;
+    --yellow: #ffd166;
+    --text: #e8f4ff;
+    --muted: #7a9bb8;
+    --border: rgba(0,212,255,0.15);
+    --glow: 0 0 40px rgba(0,212,255,0.2);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    font-family:'DM Sans',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    overflow-x:hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; z-index:0; opacity:0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 60px;
+    background:rgba(4,13,26,0.85);
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border);
+    transition:all .3s;
+  }
+  .logo {
+    font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem;
+    display:flex; align-items:center; gap:10px; color:var(--text);
+    text-decoration:none;
+  }
+  .logo-icon {
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--green));
+    display:grid; place-items:center; font-size:1.1rem;
+  }
+  .logo span { color:var(--accent); }
+  nav ul { list-style:none; display:flex; gap:36px; }
+  nav ul a {
+    color:var(--muted); text-decoration:none; font-size:.92rem; font-weight:500;
+    transition:color .2s; position:relative;
+  }
+  nav ul a::after {
+    content:''; position:absolute; bottom:-4px; left:0; right:0;
+    height:1.5px; background:var(--accent); transform:scaleX(0);
+    transition:transform .2s;
+  }
+  nav ul a:hover { color:var(--text); }
+  nav ul a:hover::after { transform:scaleX(1); }
+  .nav-cta {
+    display:flex; gap:12px; align-items:center;
+  }
+  .btn-ghost {
+    padding:9px 22px; border:1px solid var(--border); border-radius:8px;
+    color:var(--muted); background:none; cursor:pointer; font-size:.9rem;
+    font-family:'DM Sans',sans-serif; transition:all .2s;
+  }
+  .btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-primary {
+    padding:10px 24px; border-radius:8px; border:none; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#040d1a; font-weight:700; font-size:.9rem;
+    font-family:'DM Sans',sans-serif; transition:all .25s;
+    box-shadow:0 4px 20px rgba(0,212,255,0.3);
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,212,255,0.45); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    position:relative; padding:120px 60px 80px; text-align:center; overflow:hidden;
+  }
+  /* grid bg */
+  .hero-grid {
+    position:absolute; inset:0; z-index:0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.04) 1px, transparent 1px);
+    background-size:60px 60px;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent);
+  }
+  /* orbs */
+  .orb {
+    position:absolute; border-radius:50%; filter:blur(80px); pointer-events:none;
+  }
+  .orb1 { width:500px; height:500px; background:rgba(0,212,255,0.1); top:-100px; left:-100px; }
+  .orb2 { width:400px; height:400px; background:rgba(0,229,160,0.08); bottom:0; right:-80px; }
+  .orb3 { width:300px; height:300px; background:rgba(0,152,204,0.12); top:30%; left:50%; transform:translateX(-50%); }
+
+  .hero-content { position:relative; z-index:1; max-width:780px; }
+  .hero-badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.25);
+    border-radius:100px; padding:6px 18px; font-size:.82rem; color:var(--accent);
+    margin-bottom:28px; animation:fadeUp .8s ease both;
+  }
+  .badge-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  .hero h1 {
+    font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(2.8rem,6vw,5rem);
+    line-height:1.1; margin-bottom:24px;
+    animation:fadeUp .8s .1s ease both;
+  }
+  .hero h1 .grad {
+    background:linear-gradient(135deg,var(--accent) 0%,var(--green) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero p {
+    font-size:1.15rem; color:var(--muted); line-height:1.7; max-width:580px; margin:0 auto 40px;
+    animation:fadeUp .8s .2s ease both;
+  }
+  .hero-btns {
+    display:flex; gap:16px; justify-content:center; flex-wrap:wrap;
+    animation:fadeUp .8s .3s ease both;
+  }
+  .btn-large { padding:15px 36px; font-size:1rem; border-radius:10px; }
+  .btn-outline-large {
+    padding:14px 36px; border:1px solid var(--border); border-radius:10px;
+    color:var(--text); background:rgba(255,255,255,0.03); cursor:pointer;
+    font-size:1rem; font-family:'DM Sans',sans-serif; transition:all .2s;
+  }
+  .btn-outline-large:hover { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,0.05); }
+
+  /* ── STATS STRIP ── */
+  .stats-strip {
+    display:flex; justify-content:center; flex-wrap:wrap; gap:0;
+    border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    background:rgba(12,31,58,0.6); backdrop-filter:blur(10px);
+  }
+  .stat-item {
+    flex:1; min-width:160px; padding:36px 24px; text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-item:last-child { border-right:none; }
+  .stat-num {
+    font-family:'Syne',sans-serif; font-size:2.4rem; font-weight:800; color:var(--accent);
+    display:block;
+  }
+  .stat-label { font-size:.85rem; color:var(--muted); margin-top:4px; display:block; }
+
+  /* ── SECTION COMMON ── */
+  section { position:relative; }
+  .section-inner { max-width:1200px; margin:0 auto; padding:100px 60px; }
+  .section-tag {
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:.78rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:16px;
+  }
+  .section-tag::before { content:''; width:20px; height:1.5px; background:var(--accent); }
+  h2.section-title {
+    font-family:'Syne',sans-serif; font-weight:800; font-size:clamp(2rem,4vw,3rem);
+    line-height:1.15; margin-bottom:16px;
+  }
+  .section-sub { color:var(--muted); font-size:1.05rem; max-width:540px; line-height:1.7; }
+
+  /* ── FEATURES ── */
+  .features-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px; flex-wrap:wrap; gap:24px; }
+  .features-grid {
+    display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+    background:var(--border); border:1px solid var(--border); border-radius:16px; overflow:hidden;
+  }
+  .feature-card {
+    background:var(--bg2); padding:40px 36px;
+    transition:background .25s;
+    position:relative; overflow:hidden;
+  }
+  .feature-card::before {
+    content:''; position:absolute; inset:0; opacity:0;
+    background:linear-gradient(135deg,rgba(0,212,255,0.06),transparent);
+    transition:opacity .3s;
+  }
+  .feature-card:hover::before { opacity:1; }
+  .feature-card:hover { background:var(--surface); }
+  .feature-icon {
+    width:52px; height:52px; border-radius:14px; margin-bottom:24px;
+    display:grid; place-items:center; font-size:1.4rem;
+  }
+  .fi-blue { background:rgba(0,212,255,0.12); color:var(--accent); }
+  .fi-green { background:rgba(0,229,160,0.12); color:var(--green); }
+  .fi-red { background:rgba(255,77,109,0.12); color:var(--red); }
+  .fi-yellow { background:rgba(255,209,102,0.12); color:var(--yellow); }
+  .fi-purple { background:rgba(168,85,247,0.12); color:#a855f7; }
+  .fi-orange { background:rgba(249,115,22,0.12); color:#f97316; }
+  .feature-card h3 { font-family:'Syne',sans-serif; font-size:1.15rem; font-weight:700; margin-bottom:12px; }
+  .feature-card p { color:var(--muted); font-size:.9rem; line-height:1.65; }
+  .feature-card.wide { grid-column:span 2; display:flex; gap:40px; align-items:center; }
+  .feature-card.wide .fc-text { flex:1; }
+  .feature-card.wide .fc-visual { flex:1; }
+  .mini-dashboard {
+    background:var(--surface2); border-radius:12px; padding:20px;
+    border:1px solid var(--border);
+  }
+  .mini-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+  .mini-row:last-child { border-bottom:none; }
+  .mini-label { font-size:.8rem; color:var(--muted); }
+  .mini-val { font-size:.8rem; font-weight:600; }
+  .tag-green { color:var(--green); }
+  .tag-yellow { color:var(--yellow); }
+  .tag-red { color:var(--red); }
+  .mini-bar-wrap { height:6px; background:rgba(255,255,255,0.06); border-radius:4px; margin-top:12px; overflow:hidden; }
+  .mini-bar { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--accent),var(--green)); animation:barGrow 1.5s ease-out both; }
+  @keyframes barGrow { from{width:0} }
+
+  /* ── HOW IT WORKS ── */
+  .how-bg { background:var(--bg2); }
+  .steps { display:grid; grid-template-columns:repeat(4,1fr); gap:32px; margin-top:60px; position:relative; }
+  .steps::before {
+    content:''; position:absolute; top:28px; left:8%; right:8%; height:1px;
+    background:linear-gradient(90deg,transparent,var(--border),var(--border),transparent);
+    z-index:0;
+  }
+  .step { text-align:center; position:relative; z-index:1; }
+  .step-num {
+    width:56px; height:56px; border-radius:50%; display:grid; place-items:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem;
+    border:2px solid var(--border); margin:0 auto 20px;
+    background:var(--bg); color:var(--accent);
+    transition:all .3s;
+  }
+  .step:hover .step-num { border-color:var(--accent); background:rgba(0,212,255,0.1); box-shadow:var(--glow); }
+  .step h3 { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; margin-bottom:10px; }
+  .step p { color:var(--muted); font-size:.87rem; line-height:1.6; }
+
+  /* ── MODULES ── */
+  .modules-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:24px; margin-top:60px; }
+  .module-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:36px; display:flex; gap:24px; align-items:flex-start;
+    transition:all .3s; cursor:default;
+  }
+  .module-card:hover { border-color:var(--accent); transform:translateY(-4px); box-shadow:var(--glow); }
+  .module-icon {
+    width:60px; height:60px; flex-shrink:0; border-radius:16px;
+    display:grid; place-items:center; font-size:1.6rem;
+  }
+  .module-card h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; margin-bottom:8px; }
+  .module-card p { color:var(--muted); font-size:.88rem; line-height:1.6; }
+  .module-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .tag { font-size:.72rem; padding:4px 12px; border-radius:100px; border:1px solid var(--border); color:var(--muted); }
+
+  /* ── TESTIMONIALS ── */
+  .testi-bg { background:var(--bg2); }
+  .testi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:60px; }
+  .testi-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:32px; transition:all .3s;
+  }
+  .testi-card:hover { border-color:rgba(0,212,255,0.3); transform:translateY(-4px); }
+  .stars { color:var(--yellow); font-size:1rem; margin-bottom:20px; letter-spacing:2px; }
+  .testi-text { font-size:.92rem; line-height:1.7; color:var(--muted); margin-bottom:24px; }
+  .testi-author { display:flex; gap:12px; align-items:center; }
+  .avatar {
+    width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
+    font-weight:700; font-size:.9rem; flex-shrink:0;
+  }
+  .testi-name { font-weight:600; font-size:.9rem; }
+  .testi-role { font-size:.78rem; color:var(--muted); }
+
+  /* ── PRICING ── */
+  .pricing-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-top:60px; }
+  .price-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:20px;
+    padding:40px 36px; position:relative; transition:all .3s;
+  }
+  .price-card.popular {
+    border-color:var(--accent); background:var(--surface2);
+    box-shadow:var(--glow);
+  }
+  .popular-badge {
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,var(--accent),var(--green));
+    color:#040d1a; font-size:.72rem; font-weight:800; padding:5px 18px; border-radius:100px;
+    white-space:nowrap;
+  }
+  .price-tier { font-size:.8rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:12px; }
+  .price-amount { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; color:var(--text); line-height:1; }
+  .price-amount sup { font-size:1.2rem; vertical-align:super; }
+  .price-amount sub { font-size:.9rem; color:var(--muted); font-family:'DM Sans',sans-serif; }
+  .price-desc { color:var(--muted); font-size:.87rem; margin:16px 0 28px; line-height:1.6; }
+  .price-features { list-style:none; margin-bottom:32px; }
+  .price-features li {
+    display:flex; gap:10px; align-items:flex-start;
+    font-size:.88rem; color:var(--muted); padding:7px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+  }
+  .price-features li:last-child { border-bottom:none; }
+  .check { color:var(--green); font-size:.9rem; flex-shrink:0; margin-top:1px; }
+  .btn-price {
+    width:100%; padding:13px; border-radius:10px; border:1px solid var(--border);
+    background:rgba(255,255,255,0.04); color:var(--text); cursor:pointer;
+    font-family:'DM Sans',sans-serif; font-weight:600; font-size:.95rem; transition:all .2s;
+  }
+  .btn-price:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-price.filled {
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-color:transparent; color:#040d1a;
+    box-shadow:0 4px 20px rgba(0,212,255,0.3);
+  }
+  .btn-price.filled:hover { box-shadow:0 8px 30px rgba(0,212,255,0.45); transform:translateY(-2px); }
+
+  /* ── FAQ ── */
+  .faq-wrap { max-width:740px; margin:60px auto 0; }
+  .faq-item {
+    border-bottom:1px solid var(--border); overflow:hidden;
+  }
+  .faq-q {
+    width:100%; text-align:left; background:none; border:none; color:var(--text);
+    font-family:'DM Sans',sans-serif; font-size:1rem; font-weight:500;
+    padding:24px 0; display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer; gap:24px;
+  }
+  .faq-icon { flex-shrink:0; color:var(--accent); font-size:1.2rem; transition:transform .3s; }
+  .faq-a {
+    color:var(--muted); font-size:.92rem; line-height:1.75;
+    max-height:0; overflow:hidden; transition:max-height .4s ease, padding .3s;
+  }
+  .faq-item.open .faq-a { max-height:200px; padding-bottom:20px; }
+  .faq-item.open .faq-icon { transform:rotate(45deg); }
+
+  /* ── CTA BAND ── */
+  .cta-band {
+    position:relative; overflow:hidden;
+    background:linear-gradient(135deg,rgba(0,212,255,0.12),rgba(0,229,160,0.08));
+    border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+  }
+  .cta-band::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(0,212,255,0.12),transparent);
+  }
+  .cta-inner { position:relative; text-align:center; padding:100px 60px; }
+  .cta-inner h2 { font-family:'Syne',sans-serif; font-size:clamp(2rem,4vw,3.2rem); font-weight:800; margin-bottom:16px; }
+  .cta-inner p { color:var(--muted); font-size:1.05rem; max-width:480px; margin:0 auto 40px; }
+  .cta-btns { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+
+  /* ── FOOTER ── */
+  footer {
+    background:var(--bg); border-top:1px solid var(--border); padding:70px 60px 36px;
+  }
+  .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:60px; }
+  .footer-brand p { color:var(--muted); font-size:.88rem; line-height:1.7; max-width:280px; margin-top:16px; }
+  .footer-socials { display:flex; gap:12px; margin-top:24px; }
+  .social-icon {
+    width:36px; height:36px; border-radius:8px; border:1px solid var(--border);
+    display:grid; place-items:center; color:var(--muted); text-decoration:none;
+    font-size:.85rem; transition:all .2s;
+  }
+  .social-icon:hover { border-color:var(--accent); color:var(--accent); }
+  .footer-col h4 { font-weight:600; font-size:.9rem; margin-bottom:16px; color:var(--text); }
+  .footer-col ul { list-style:none; }
+  .footer-col ul li { margin-bottom:10px; }
+  .footer-col ul a { color:var(--muted); text-decoration:none; font-size:.88rem; transition:color .2s; }
+  .footer-col ul a:hover { color:var(--accent); }
+  .footer-bottom {
+    border-top:1px solid var(--border); padding-top:28px;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+  .footer-bottom p { color:var(--muted); font-size:.82rem; }
+
+  /* ── SCROLL ANIMATIONS ── */
+  .reveal { opacity:0; transform:translateY(30px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.visible { opacity:1; transform:none; }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:1024px){
+    nav ul { display:none; }
+    .section-inner { padding:80px 32px; }
+    .features-grid { grid-template-columns:repeat(2,1fr); }
+    .feature-card.wide { grid-column:span 2; flex-direction:column; }
+    .footer-grid { grid-template-columns:1fr 1fr; }
+  }
+  @media(max-width:768px){
+    nav { padding:16px 24px; }
+    .hero { padding:100px 24px 60px; }
+    .steps { grid-template-columns:repeat(2,1fr); }
+    .steps::before { display:none; }
+    .modules-grid, .testi-grid, .pricing-grid { grid-template-columns:1fr; }
+    .features-grid { grid-template-columns:1fr; }
+    .feature-card.wide { grid-column:span 1; }
+    .footer-grid { grid-template-columns:1fr; }
+    footer { padding:48px 24px 24px; }
+    .stats-strip { flex-direction:column; }
+    .stat-item { border-right:none; border-bottom:1px solid var(--border); }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:4px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a class="logo" href="#">
+    <div class="logo-icon">🏥</div>
+    Medi<span>Core</span>
+  </a>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#modules">Modules</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <div class="nav-cta">
+    <button class="btn-ghost">Log In</button>
+    <button class="btn-primary">Start Free Trial</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="badge-dot"></div>
+      AI-Powered Hospital Management — Now Live
+    </div>
+    <h1>
+      The Smarter Way to<br>
+      <span class="grad">Run Your Hospital</span>
+    </h1>
+    <p>
+      MediCore HMS unifies patient records, billing, appointments, pharmacy, lab, and 20+ modules into one intelligent platform — built for hospitals of every size.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary btn-large">Get Started Free</button>
+      <button class="btn-outline-large">▶ Watch Demo</button>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat-item reveal">
+    <span class="stat-num">2,500+</span>
+    <span class="stat-label">Hospitals Worldwide</span>
+  </div>
+  <div class="stat-item reveal">
+    <span class="stat-num">12M+</span>
+    <span class="stat-label">Patients Managed</span>
+  </div>
+  <div class="stat-item reveal">
+    <span class="stat-num">99.9%</span>
+    <span class="stat-label">Uptime Guarantee</span>
+  </div>
+  <div class="stat-item reveal">
+    <span class="stat-num">40%</span>
+    <span class="stat-label">Reduced Admin Time</span>
+  </div>
+  <div class="stat-item reveal">
+    <span class="stat-num">HIPAA</span>
+    <span class="stat-label">Fully Compliant</span>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="features-header reveal">
+      <div>
+        <div class="section-tag">Core Features</div>
+        <h2 class="section-title">Everything Your Hospital<br>Needs in One Platform</h2>
+      </div>
+      <p class="section-sub">From OPD to ICU, from billing to analytics — MediCore covers every workflow seamlessly.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon fi-blue">🧬</div>
+        <h3>Electronic Health Records</h3>
+        <p>Centralized patient profiles with complete medical history, allergies, diagnoses, prescriptions, and lab results — accessible in seconds.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-green">📅</div>
+        <h3>Smart Appointment Scheduling</h3>
+        <p>AI-driven scheduling that eliminates double bookings, reduces wait times, and sends automated reminders via SMS and email.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-yellow">💰</div>
+        <h3>Billing & Insurance Claims</h3>
+        <p>Automate invoicing, insurance verification, and claim submission. Reduce rejections with real-time eligibility checks.</p>
+      </div>
+      <div class="feature-card wide">
+        <div class="fc-text">
+          <div class="feature-icon fi-blue">📊</div>
+          <h3>Real-Time Analytics Dashboard</h3>
+          <p>Monitor bed occupancy, revenue, patient flow, and staff performance from a live command center. Make data-backed decisions instantly.</p>
+          <div class="module-tags" style="margin-top:20px">
+            <span class="tag">Bed Tracking</span>
+            <span class="tag">Revenue KPIs</span>
+            <span class="tag">Staff Metrics</span>
+            <span class="tag">Custom Reports</span>
+          </div>
+        </div>
+        <div class="fc-visual">
+          <div class="mini-dashboard">
+            <div class="mini-row">
+              <span class="mini-label">Bed Occupancy</span>
+              <span class="mini-val tag-green">78% — Normal</span>
+            </div>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:78%"></div></div>
+            <div class="mini-row" style="margin-top:14px">
+              <span class="mini-label">OPD Patients Today</span>
+              <span class="mini-val">247</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Pending Lab Reports</span>
+              <span class="mini-val tag-yellow">12 — Pending</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">ICU Status</span>
+              <span class="mini-val tag-red">92% — High</span>
+            </div>
+            <div class="mini-row">
+              <span class="mini-label">Today's Revenue</span>
+              <span class="mini-val tag-green">₹4,82,500</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-purple">💊</div>
+        <h3>Pharmacy Management</h3>
+        <p>Track drug inventory, automate low-stock alerts, manage prescriptions, and prevent dispensing errors with barcode scanning.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon fi-orange">🔬</div>
+        <h3>Lab & Diagnostics</h3>
+        <p>Streamline sample collection, test processing, and result delivery. Integrate with lab equipment for zero-touch reporting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-bg">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="section-tag" style="justify-content:center">How It Works</div>
+      <h2 class="section-title">Up & Running in 4 Steps</h2>
+      <p class="section-sub" style="margin:0 auto">Zero disruption to your existing workflows. Go live in days, not months.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Sign Up & Configure</h3>
+        <p>Create your hospital account and customize modules, departments, and user roles in minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Import Your Data</h3>
+        <p>Seamlessly migrate existing patient records, staff data, and billing info with our guided import wizard.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Train Your Team</h3>
+        <p>Access 50+ video tutorials, live webinars, and 24/7 chat support. Most staff are productive within a day.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h3>Go Live</h3>
+        <p>Launch across all departments simultaneously. Our team monitors your go-live for a smooth transition.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section id="modules">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="section-tag">Modules</div>
+      <h2 class="section-title">20+ Integrated Modules</h2>
+      <p class="section-sub">Each module works independently or together — you choose what your hospital needs.</p>
+    </div>
+    <div class="modules-grid reveal">
+      <div class="module-card">
+        <div class="module-icon fi-blue">🏥</div>
+        <div>
+          <h3>OPD Management</h3>
+          <p>Queue management, doctor scheduling, patient registration, consultation notes, and follow-up automation.</p>
+          <div class="module-tags">
+            <span class="tag">Token System</span><span class="tag">e-Prescriptions</span><span class="tag">Follow-ups</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-icon fi-green">🛏️</div>
+        <div>
+          <h3>IPD & Ward Management</h3>
+          <p>Real-time bed tracking, admission/discharge/transfer workflows, nursing notes, and diet management.</p>
+          <div class="module-tags">
+            <span class="tag">Bed Map</span><span class="tag">ADT Workflow</span><span class="tag">Nursing Care</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-icon fi-red">🚨</div>
+        <div>
+          <h3>Emergency & Triage</h3>
+          <p>Rapid patient intake, triage scoring, real-time alerts, and seamless escalation to ICU or OR.</p>
+          <div class="module-tags">
+            <span class="tag">Triage Scoring</span><span class="tag">Code Blue</span><span class="tag">ER Analytics</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-icon fi-purple">🔬</div>
+        <div>
+          <h3>Operation Theatre</h3>
+          <p>OT scheduling, surgical team assignment, equipment tracking, pre/post-op checklists, and consent management.</p>
+          <div class="module-tags">
+            <span class="tag">OT Scheduling</span><span class="tag">Checklists</span><span class="tag">Consent Forms</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-icon fi-yellow">💊</div>
+        <div>
+          <h3>Pharmacy & Inventory</h3>
+          <p>Drug dispensing, stock alerts, expiry management, supplier ordering, and full audit trails.</p>
+          <div class="module-tags">
+            <span class="tag">Barcode Scan</span><span class="tag">Reorder Points</span><span class="tag">GST Billing</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-card">
+        <div class="module-icon fi-orange">👨‍💼</div>
+        <div>
+          <h3>HR & Payroll</h3>
+          <p>Staff attendance, shift scheduling, performance tracking, and automated salary processing with TDS.</p>
+          <div class="module-tags">
+            <span class="tag">Attendance</span><span class="tag">Payslips</span><span class="tag">Leave Mgmt</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testi-bg">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="section-tag" style="justify-content:center">Testimonials</div>
+      <h2 class="section-title">Trusted by Healthcare Leaders</h2>
+    </div>
+    <div class="testi-grid reveal">
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"MediCore transformed our 400-bed hospital completely. Patient wait times dropped by 35% in the first month. The real-time dashboard alone is worth every rupee."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(0,212,255,0.15);color:var(--accent)">DR</div>
+          <div>
+            <div class="testi-name">Dr. Rajesh Verma</div>
+            <div class="testi-role">Medical Director, Apollo Regional Hospital</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"The billing and insurance module alone recovered ₹18 lakhs in previously rejected claims within 60 days. Exceptional ROI. Our finance team loves it."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(0,229,160,0.15);color:var(--green)">PK</div>
+          <div>
+            <div class="testi-name">Priya Krishnamurthy</div>
+            <div class="testi-role">CFO, Manipal Health Network</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Our nursing staff adapted within two days. The mobile app is intuitive and the 24/7 support team is genuinely helpful. Implementation was flawless."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:rgba(255,209,102,0.15);color:var(--yellow)">AS</div>
+          <div>
+            <div class="testi-name">Arjun Sharma</div>
+            <div class="testi-role">COO, Fortis Community Hospital</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="section-tag" style="justify-content:center">Pricing</div>
+      <h2 class="section-title">Simple, Transparent Pricing</h2>
+      <p class="section-sub" style="margin:0 auto">No hidden fees. No per-user charges. Scale freely.</p>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <div class="price-amount"><sup>₹</sup>12,999<sub>/mo</sub></div>
+        <p class="price-desc">Perfect for clinics and small hospitals up to 50 beds.</p>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Up to 50 beds</li>
+          <li><span class="check">✓</span> OPD & IPD modules</li>
+          <li><span class="check">✓</span> Basic billing & invoicing</li>
+          <li><span class="check">✓</span> 5 user accounts</li>
+          <li><span class="check">✓</span> Email support</li>
+          <li><span class="check">✓</span> 50 GB storage</li>
+        </ul>
+        <button class="btn-price">Get Started</button>
+      </div>
+      <div class="price-card popular">
+        <div class="popular-badge">🔥 Most Popular</div>
+        <div class="price-tier">Professional</div>
+        <div class="price-amount"><sup>₹</sup>29,999<sub>/mo</sub></div>
+        <p class="price-desc">For mid-size hospitals up to 300 beds with full workflow automation.</p>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Up to 300 beds</li>
+          <li><span class="check">✓</span> All 20+ modules</li>
+          <li><span class="check">✓</span> Advanced billing & insurance</li>
+          <li><span class="check">✓</span> Unlimited users</li>
+          <li><span class="check">✓</span> 24/7 priority support</li>
+          <li><span class="check">✓</span> 500 GB storage</li>
+          <li><span class="check">✓</span> Analytics & custom reports</li>
+          <li><span class="check">✓</span> Mobile app access</li>
+        </ul>
+        <button class="btn-price filled">Start Free Trial</button>
+      </div>
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount" style="font-size:2rem;line-height:1.3">Custom<br><span style="font-size:.9rem;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400">Contact Sales</span></div>
+        <p class="price-desc">For hospital groups, chains, and 300+ bed facilities with custom requirements.</p>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Unlimited beds</li>
+          <li><span class="check">✓</span> All modules + custom dev</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+          <li><span class="check">✓</span> On-premise or cloud</li>
+          <li><span class="check">✓</span> SLA guarantee</li>
+          <li><span class="check">✓</span> Unlimited storage</li>
+          <li><span class="check">✓</span> API integrations</li>
+        </ul>
+        <button class="btn-price">Contact Sales</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="testi-bg">
+  <div class="section-inner">
+    <div class="reveal" style="text-align:center">
+      <div class="section-tag" style="justify-content:center">FAQ</div>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq-wrap reveal">
+      <div class="faq-item open">
+        <button class="faq-q">How long does implementation take?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Most hospitals are fully live within 7–14 days. Small clinics can go live in as little as 48 hours. Our dedicated implementation team handles data migration, configuration, and staff training end-to-end.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is my patient data secure and HIPAA compliant?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Absolutely. MediCore is fully HIPAA and NABH compliant. All data is encrypted at rest and in transit using AES-256. We perform daily backups, and our infrastructure is hosted on ISO 27001 certified data centers in India.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can we integrate with existing lab equipment and HIS systems?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes. MediCore supports HL7, FHIR, and custom API integrations. We have pre-built connectors for popular lab analyzers (Siemens, Roche, Abbott) and can build custom integrations for enterprise clients.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is there a free trial available?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes! We offer a 30-day free trial with full access to all Professional plan features. No credit card required. You can also request a personalized live demo with one of our product specialists.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Does MediCore support multi-hospital or chain operations?<span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes. Our Enterprise plan is built for hospital groups with centralized administration, inter-hospital patient transfers, consolidated reporting, and individual hospital dashboards — all under one login.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band" id="contact">
+  <div class="cta-inner reveal">
+    <h2>Ready to Transform<br>Your Hospital?</h2>
+    <p>Join 2,500+ hospitals already running smarter with MediCore HMS.</p>
+    <div class="cta-btns">
+      <button class="btn-primary btn-large">Start 30-Day Free Trial</button>
+      <button class="btn-outline-large">Schedule a Demo</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="#">
+          <div class="logo-icon">🏥</div>
+          Medi<span>Core</span>
+        </a>
+        <p>The intelligent hospital management platform trusted by 2,500+ healthcare facilities across India and beyond.</p>
+        <div class="footer-socials">
+          <a class="social-icon" href="#">𝕏</a>
+          <a class="social-icon" href="#">in</a>
+          <a class="social-icon" href="#">f</a>
+          <a class="social-icon" href="#">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#">Features</a></li>
+          <li><a href="#">Modules</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Changelog</a></li>
+          <li><a href="#">Roadmap</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Press Kit</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">HIPAA Compliance</a></li>
+          <li><a href="#">Security</a></li>
+          <li><a href="#">Cookies</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 MediCore HMS. All rights reserved. Made with ❤️ for Healthcare.</p>
+      <p style="color:var(--muted);font-size:.82rem">HIPAA Compliant &nbsp;·&nbsp; NABH Ready &nbsp;·&nbsp; ISO 27001 Certified</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.1 });
+reveals.forEach(r => io.observe(r));
+
+// FAQ toggle
+document.querySelectorAll('.faq-q').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// Nav scroll effect
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  if (window.scrollY > 60) {
+    nav.style.background = 'rgba(4,13,26,0.97)';
+    nav.style.padding = '14px 60px';
+  } else {
+    nav.style.background = 'rgba(4,13,26,0.85)';
+    nav.style.padding = '20px 60px';
+  }
+});
+
+// Counter animation for stats
+const counters = document.querySelectorAll('.stat-num');
+const countIO = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const el = e.target;
+      const text = el.textContent;
+      const num = parseFloat(text.replace(/[^0-9.]/g,''));
+      if (!isNaN(num) && num > 1) {
+        let start = 0; const duration = 1500;
+        const step = timestamp => {
+          if (!start) start = timestamp;
+          const progress = Math.min((timestamp - start) / duration, 1);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          const cur = Math.floor(ease * num);
+          el.textContent = text.replace(/[\d.]+/, text.includes('.') ? (ease * num).toFixed(1) : cur);
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+      countIO.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+counters.forEach(c => countIO.observe(c));
+</script>
+</body>
+</html>
